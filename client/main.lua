@@ -68,6 +68,49 @@ function despawnHousePlants()
     end)
 end
 
+RegisterNetEvent('weed:client:harvest', function()
+    QBCore.Functions.Progressbar("remove_weed_plant", "Harvesting Plant", 8000, false, true, {
+        disableMovement = true,
+        disableCarMovement = true,
+        disableMouse = false,
+        disableCombat = true,
+    }, {
+        animDict = "amb@world_human_gardener_plant@male@base",
+        anim = "base",
+        flags = 16,
+    }, {}, {}, function() -- Done
+        ClearPedTasks(ped)
+        if plantData["plantStats"]["gender"] == "M" then
+            amount = math.random(1, 2)
+        else
+            amount = math.random(1, 6)
+        end
+        TriggerServerEvent('qb-weed:server:harvestPlant', currentHouse, amount, plantData["plantSort"]["name"], plantData["plantStats"]["plantId"])
+    end, function() -- Cancel
+        ClearPedTasks(ped)
+        QBCore.Functions.Notify("Process Canceled", "error")
+    end)
+end)
+
+RegisterNetEvent('weed:client:remove', function()
+    QBCore.Functions.Progressbar("remove_weed_plant", "Removing The Plant", 8000, false, true, {
+        disableMovement = true,
+        disableCarMovement = true,
+        disableMouse = false,
+        disableCombat = true,
+    }, {
+        animDict = "amb@world_human_gardener_plant@male@base",
+        anim = "base",
+        flags = 16,
+    }, {}, {}, function() -- Done
+        ClearPedTasks(ped)
+        TriggerServerEvent('qb-weed:server:removeDeathPlant', currentHouse, plantData["plantStats"]["plantId"])
+    end, function() -- Cancel
+        ClearPedTasks(ped)
+        QBCore.Functions.Notify("Process Canceled", "error")
+    end)
+end)
+
 local ClosestTarget = 0
 
 CreateThread(function()
@@ -98,8 +141,45 @@ CreateThread(function()
                             ["plantId"] = housePlants[currentHouse][k].plantid,
                         }
                     }
-
-                    local plyDistance = #(GetEntityCoords(ped) - vector3(plantData["plantCoords"]["x"], plantData["plantCoords"]["y"], plantData["plantCoords"]["z"]))
+                    if QBWeed.UseTarget then
+                        if plantData["plantStats"]["health"] > 0 then
+                            exports['qb-target']:AddTargetModel(QBWeed.growing, {
+                                options = {
+                                    {
+                                        icon = "fa-solid fa-cannabis",
+                                        label = 'Sort: '..plantData["plantSort"]["label"]..'~w~ ['..plantData["plantStats"]["gender"]..'] | Nutrition: ~b~'..plantData["plantStats"]["food"]..'% ~w~ | Health: ~b~'..plantData["plantStats"]["health"]..'%',
+                                    },
+                                },
+                                distance = 2.5,
+                            })
+                            exports['qb-target']:AddTargetModel(QBWeed.Harvest, {
+                                options = {
+                                    {
+                                        event = 'weed:client:harvest',
+                                        icon = "fa-solid fa-cannabis",
+                                        label = "Press ~g~ E ~w~ to harvest plant.",
+                                    },
+                                    {
+                                        icon = "fa-solid fa-cannabis",
+                                        label = 'Sort: ~g~'..plantData["plantSort"]["label"]..'~w~ ['..plantData["plantStats"]["gender"]..'] | Nutrition: ~b~'..plantData["plantStats"]["food"]..'% ~w~ | Health: ~b~'..plantData["plantStats"]["health"]..'%',
+                                    },
+                                },
+                                distance = 2.5,
+                            })
+                        elseif plantData["plantStats"]["health"] == 0 then
+                            exports['qb-target']:AddTargetModel(QBWeed.Props, {
+                                options = {
+                                    {
+                                        event = 'weed:client:remove',
+                                        icon = "fa-solid fa-cannabis",
+                                        label = "The plant has died. Press ~r~ E ~w~ to remove plant.",
+                                    },
+                                },
+                                distance = 2.5,
+                            })
+                        end
+                    else
+                        local plyDistance = #(GetEntityCoords(ped) - vector3(plantData["plantCoords"]["x"], plantData["plantCoords"]["y"], plantData["plantCoords"]["z"]))
 
                     if plyDistance < 0.8 then
 
@@ -155,6 +235,7 @@ CreateThread(function()
                                 end)
                             end
                         end
+                    end
                     end
                 end
             end

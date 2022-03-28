@@ -1,6 +1,19 @@
 QBWeed = {}
 QBWeed.HarvestTime = 40 * 1000
 
+QBWeed.growing = {
+    "bkr_prop_weed_01_small_01c",
+    "bkr_prop_weed_01_small_01b",
+    "bkr_prop_weed_01_small_01a",
+    "bkr_prop_weed_med_01b",
+    "bkr_prop_weed_lrg_01a",
+    "bkr_prop_weed_lrg_01b",
+}
+
+QBWeed.Harvest = {
+    "bkr_prop_weed_lrg_01b"
+}
+
 QBWeed.Plants = {
     ["og-kush"] = {
         ["label"] = "OGKush 2g",
